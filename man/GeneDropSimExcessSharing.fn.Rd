@@ -7,13 +7,14 @@ Estimates the probability that all subjects in a subset of pedigree members shar
 }
 \usage{
 GeneDropSimExcessSharing.fn(trio.list, id, dt.vec, fd.indices, phihat,
- RVfreq, ord=5, n = 1e3, k = 10)
+ RVfreq, carriers=dt.vec, ord=5, n = 1e3, k = 10)
 }
 \arguments{
   \item{trio.list}{a list of trio objects encoding the pedigree structure. }
   \item{id}{a vector of identifiers of the pedigree members. }
   \item{dt.vec}{ a vector of identifiers of the subset of pedigree members for which to estimate the sharing probability. Must be a subset of the \code{id} vector.}
   \item{fd.indices}{a vector of the indices of the founders of the pedigree.}
+  \item{carriers}{optional character vector of subjects carrying the rare variant among all final descendants. If null, all final descendants are assumed to carry the rare variant.}
   \item{phihat}{a vector of values of the mean kinship coefficient between founders. Must be non-negative.} 
   \item{RVfreq}{frequency of the variant in the population (optional). When missing, the variant frequency tends to 0.}
   \item{ord}{order of the polynomial approximation of the number of distinct alleles among pedigree founders.}
@@ -27,7 +28,7 @@ GeneDropSimExcessSharing.fn(trio.list, id, dt.vec, fd.indices, phihat,
    The events that the variant was observed in any of the subjects from \code{dt.vec} and in all of them are then recorded. The simulation continues until the number of replicates where the RV was observed in any of the subjects from \code{dt.vec} reaches \code{n} or the number of replicates reaches \code{k n}. The RV sharing probability is then estimated as the number of replicates where the RV was observed in all subjects from \code{dt.vec} over \code{n} (or the number of replicates where the RV was observed in any of the subjects when \code{k n} replicates are reached).
   }
 \references{
-Bureau, A., Younkin, S., Parker, M.M., Bailey-Wilson, J.E., Marazita, M.L., Murray, J.C., Mangold, E., Albacha-Hejazi, H., Beaty, T.H. and Ruczinski, I. (under review) Inferring rare disease risk variants based on exact probabilities of sharing by multiple affected relatives.  
+Bureau, A., Younkin, S., Parker, M.M., Bailey-Wilson, J.E., Marazita, M.L., Murray, J.C., Mangold, E., Albacha-Hejazi, H., Beaty, T.H. and Ruczinski, I. (2014) Inferring rare disease risk variants based on exact probabilities of sharing by multiple affected relatives. Bioinformatics, 30(15): 2189-96.  
 } 
 \seealso{
 \code{\link{ped2trio}, \link{GeneDropSim.fn}}
