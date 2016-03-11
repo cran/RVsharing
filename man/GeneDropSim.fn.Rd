@@ -34,11 +34,11 @@ Bureau, A., Younkin, S., Parker, M.M., Bailey-Wilson, J.E., Marazita, M.L., Murr
 data(ped.list)
 plot(ped.list[[54]])
 trio.obj = ped2trio(ped.list[[54]])
-
-RVsharing(ped.list[[54]])
          
-# Result should be very close to exact value
 GeneDropSim.fn( trio.list = trio.obj$object, id=ped.list[[54]]$id, dt.vec = c("40","47"),
  fd.indices = trio.obj$fd.indices, n = 5e3)
+
+# Result should be very close to exact value
+RVsharing(ped.list[[54]])
 }
 \author{Samuel G. Younkin <syounkin@stat.wisc.edu> and Alexandre Bureau <alexandre.bureau@msp.ulaval.ca>}

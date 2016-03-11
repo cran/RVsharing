@@ -1,8 +1,8 @@
 Package: RVsharing
 Type: Package
 Title: Probability of Sharing Rare Variants among Relatives
-Version: 1.3.4
-Date: 2015-05-10
+Version: 1.4.0
+Date: 2016-02-23
 Author: Alexandre Bureau, Ingo Ruczinski, Samuel G. Younkin
 Maintainer: Alexandre Bureau <alexandre.bureau@msp.ulaval.ca>
 Description: Computes estimates of the probability of related individuals sharing a rare variant.
@@ -13,10 +13,11 @@ Suggests:
 Enhances:
 Collate: AllGenerics.R AllClasses.R methods-pedigree.R methods-trio.R
         methods-RVsharingProb.R functions.R approx2_functions.R
-        ped2trio.R PFU.R rare_variant_sharing_v3.R zzz.R
+        ped2trio.R PFU.R rare_variant_sharing_v3.R extract_carriers.R
+        pvalue_functions.R RVgene.R zzz.R
 LazyLoad: yes
 biocViews:
-Packaged: 2015-05-10 15:43:50 UTC; alexandrebureau
 NeedsCompilation: no
+Packaged: 2016-03-09 15:14:50 UTC; Jordie
 Repository: CRAN
-Date/Publication: 2015-05-11 16:37:00
+Date/Publication: 2016-03-11 00:42:07
