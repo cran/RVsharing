@@ -1,4 +1,4 @@
-RVgene = function(ped.mat,ped.listfams,sites,fams,pattern.prob.list,nequiv.list,N.list,type="alleles",minor.allele.vec,precomputed.prob=list(0))
+RVgene = function(ped.mat,ped.listfams,sites,fams,pattern.prob.list,nequiv.list,N.list,type="alleles",minor.allele.vec,precomputed.prob=list(0),maxdim = 1e9)
 {
 	# ped.mat : pedigrees coded as in a ped file
 	# ped.listfams : list of pedigree objects, one object for each pedigree in ped.mat
@@ -77,8 +77,19 @@ RVgene = function(ped.mat,ped.listfams,sites,fams,pattern.prob.list,nequiv.list,
 		if (length(carriers)>0) 
 		{
 			#cat (f,"\n")
-			if (fams.vec[f] %in% names(precomputed.prob)) 
-				tmp = precomputed.prob[[fams.vec[f]]][length(carriers)]
+			if (fams.vec[f] %in% names(precomputed.prob))
+			{
+				# If the precomputed probabilities for the current family
+				# have no name, then assume the probabilities are listed
+				# for each possible number of carriers in the family
+				if (is.null(names(precomputed.prob[[fams.vec[f]]])))
+					tmp = precomputed.prob[[fams.vec[f]]][length(carriers)]
+				# Otherwise, the names are assumed to be carrier subsets 
+				# separated by ; and the probability for the current carriers
+				# is extracted
+				else
+					tmp = precomputed.prob[[fams.vec[f]]][paste(carriers,collapse=";")]
+			} 
 			else tmp = RVsharing(ped.listfams[[fams.vec[f]]],carriers=carriers)@pshare
 			# If the RV has lower sharing probability, we keep it for this family
 			if (is.na(famRVprob[fams.vec[f]]) || tmp < famRVprob[fams.vec[f]])
@@ -92,18 +103,31 @@ RVgene = function(ped.mat,ped.listfams,sites,fams,pattern.prob.list,nequiv.list,
 	# Identify number of informative families
 	fam.info = names(famRVprob)[!is.na(famRVprob)]
 #	print(fam.info)
-#	print(famNcarriers[fam.info])
-	nfam.info = length(fam.info)
-
+    	nfam.info = length(fam.info)
+    if (nfam.info>0)
+    mdim = prod(sapply(N.list[fam.info],length))
+    else mdim = 0
+#    cat(mdim,"\n")
+    if (mdim > maxdim) 
+    {
+    	warning ("Number of possible combinations of sharing patterns is too high.")   
+	 	compute.p = FALSE   	
+    }
+    else compute.p = TRUE
+    
 	# No informative family	
-	if (nfam.info == 0) p = pall = 1
+	if (nfam.info == 0) p = pall = potentialp = 1
 	# One informative family
 	else if (nfam.info == 1)
 	{
 		p = sum((nequiv.list[[fam.info]]*pattern.prob.list[[fam.info]])[round(pattern.prob.list[[fam.info]],5)<=round(famRVprob[fam.info],5) & N.list[[fam.info]]>=famNcarriers[fam.info]])
-		pall = ifelse(famNcarriers[fam.info]==max(N.list[[fam.info]]),min(pattern.prob.list[[fam.info]]),1)
+		potentialp = min(pattern.prob.list[[fam.info]])
+		pall = ifelse(famNcarriers[fam.info]==max(N.list[[fam.info]]),potentialp,1)
 	}
-	else if (nfam.info == 2)
+	else 
+	if (compute.p)
+    {
+	if (nfam.info == 2)
 	{
 		# Creating matrices of joint probabilities, number of equivalent patterns and number of carriers for the two informative families
 		pattern.prob.array = outer(pattern.prob.list[[fam.info[1]]],pattern.prob.list[[fam.info[2]]])
@@ -138,22 +162,61 @@ RVgene = function(ped.mat,ped.listfams,sites,fams,pattern.prob.list,nequiv.list,
 		nequiv.array = outer(outer(outer(outer(outer(nequiv.list[[fam.info[1]]],nequiv.list[[fam.info[2]]]),nequiv.list[[fam.info[3]]]),nequiv.list[[fam.info[4]]]),nequiv.list[[fam.info[5]]]),nequiv.list[[fam.info[6]]])	
 		N.array = outer(outer(outer(outer(outer(N.list[[fam.info[1]]],N.list[[fam.info[2]]],"+"),N.list[[fam.info[3]]],"+"),N.list[[fam.info[4]]],"+"),N.list[[fam.info[5]]],"+"),N.list[[fam.info[6]]],"+")
 	} 
-	else stop ("More than 6 informative families.")
+	else if (nfam.info == 7)
+	{
+		# Creating matrices of joint probabilities, number of equivalent patterns and number of carriers for the two informative families
+		pattern.prob.array = outer(outer(outer(outer(outer(outer(pattern.prob.list[[fam.info[1]]],pattern.prob.list[[fam.info[2]]]),pattern.prob.list[[fam.info[3]]]),pattern.prob.list[[fam.info[4]]]),pattern.prob.list[[fam.info[5]]]),pattern.prob.list[[fam.info[6]]]),pattern.prob.list[[fam.info[7]]])
+		nequiv.array = outer(outer(outer(outer(outer(outer(nequiv.list[[fam.info[1]]],nequiv.list[[fam.info[2]]]),nequiv.list[[fam.info[3]]]),nequiv.list[[fam.info[4]]]),nequiv.list[[fam.info[5]]]),nequiv.list[[fam.info[6]]]),nequiv.list[[fam.info[7]]])	
+		N.array = outer(outer(outer(outer(outer(outer(N.list[[fam.info[1]]],N.list[[fam.info[2]]],"+"),N.list[[fam.info[3]]],"+"),N.list[[fam.info[4]]],"+"),N.list[[fam.info[5]]],"+"),N.list[[fam.info[6]]],"+"),N.list[[fam.info[7]]],"+")
+	} 
+	else if (nfam.info == 8)
+	{
+		# Creating matrices of joint probabilities, number of equivalent patterns and number of carriers for the two informative families
+		pattern.prob.array = outer(outer(outer(outer(outer(outer(outer(pattern.prob.list[[fam.info[1]]],pattern.prob.list[[fam.info[2]]]),pattern.prob.list[[fam.info[3]]]),pattern.prob.list[[fam.info[4]]]),pattern.prob.list[[fam.info[5]]]),pattern.prob.list[[fam.info[6]]]),pattern.prob.list[[fam.info[7]]]),pattern.prob.list[[fam.info[8]]])
+		nequiv.array = outer(outer(outer(outer(outer(outer(outer(nequiv.list[[fam.info[1]]],nequiv.list[[fam.info[2]]]),nequiv.list[[fam.info[3]]]),nequiv.list[[fam.info[4]]]),nequiv.list[[fam.info[5]]]),nequiv.list[[fam.info[6]]]),nequiv.list[[fam.info[7]]]),nequiv.list[[fam.info[8]]])	
+		N.array = outer(outer(outer(outer(outer(outer(outer(N.list[[fam.info[1]]],N.list[[fam.info[2]]],"+"),N.list[[fam.info[3]]],"+"),N.list[[fam.info[4]]],"+"),N.list[[fam.info[5]]],"+"),N.list[[fam.info[6]]],"+"),N.list[[fam.info[7]]],"+"),N.list[[fam.info[8]]],"+")
+	} 
+	else if (nfam.info == 9)
+	{
+		# Creating matrices of joint probabilities, number of equivalent patterns and number of carriers for the two informative families
+		pattern.prob.array = outer(outer(outer(outer(outer(outer(outer(outer(pattern.prob.list[[fam.info[1]]],pattern.prob.list[[fam.info[2]]]),pattern.prob.list[[fam.info[3]]]),pattern.prob.list[[fam.info[4]]]),pattern.prob.list[[fam.info[5]]]),pattern.prob.list[[fam.info[6]]]),pattern.prob.list[[fam.info[7]]]),pattern.prob.list[[fam.info[8]]]),pattern.prob.list[[fam.info[9]]])
+			nequiv.array = outer(outer(outer(outer(outer(outer(outer(outer(nequiv.list[[fam.info[1]]],nequiv.list[[fam.info[2]]]),nequiv.list[[fam.info[3]]]),nequiv.list[[fam.info[4]]]),nequiv.list[[fam.info[5]]]),nequiv.list[[fam.info[6]]]),nequiv.list[[fam.info[7]]]),nequiv.list[[fam.info[8]]]),nequiv.list[[fam.info[9]]]) 	
+		N.array = outer(outer(outer(outer(outer(outer(outer(outer(N.list[[fam.info[1]]],N.list[[fam.info[2]]],"+"),N.list[[fam.info[3]]],"+"),N.list[[fam.info[4]]],"+"),N.list[[fam.info[5]]],"+"),N.list[[fam.info[6]]],"+"),N.list[[fam.info[7]]],"+"),N.list[[fam.info[8]]],"+"),N.list[[fam.info[9]]],"+") 
+	} 
+	else if (nfam.info == 10)
+	{
+		# Creating matrices of joint probabilities, number of equivalent patterns and number of carriers for the two informative families
+		pattern.prob.array = outer(outer(outer(outer(outer(outer(outer(outer(outer(pattern.prob.list[[fam.info[1]]],pattern.prob.list[[fam.info[2]]]),pattern.prob.list[[fam.info[3]]]),pattern.prob.list[[fam.info[4]]]),pattern.prob.list[[fam.info[5]]]),pattern.prob.list[[fam.info[6]]]),pattern.prob.list[[fam.info[7]]]),pattern.prob.list[[fam.info[8]]]),pattern.prob.list[[fam.info[9]]]),pattern.prob.list[[fam.info[10]]])
+			nequiv.array = outer(outer(outer(outer(outer(outer(outer(outer(outer(nequiv.list[[fam.info[1]]],nequiv.list[[fam.info[2]]]),nequiv.list[[fam.info[3]]]),nequiv.list[[fam.info[4]]]),nequiv.list[[fam.info[5]]]),nequiv.list[[fam.info[6]]]),nequiv.list[[fam.info[7]]]),nequiv.list[[fam.info[8]]]),nequiv.list[[fam.info[9]]]) ,nequiv.list[[fam.info[10]]])	
+		N.array = outer(outer(outer(outer(outer(outer(outer(outer(outer(N.list[[fam.info[1]]],N.list[[fam.info[2]]],"+"),N.list[[fam.info[3]]],"+"),N.list[[fam.info[4]]],"+"),N.list[[fam.info[5]]],"+"),N.list[[fam.info[6]]],"+"),N.list[[fam.info[7]]],"+"),N.list[[fam.info[8]]],"+"),N.list[[fam.info[9]]],"+"),N.list[[fam.info[10]]],"+") 
+	} 
+	else 
+	{
+	warning ("More than 10 informative families.")
+	compute.p = FALSE
+	}
+	}
 	
 	if (nfam.info>1)
 	{
-		dvec=dim(pattern.prob.array)
+		# Computing potential p-value
+		potentialp = prod(sapply(pattern.prob.list[fam.info],min))
 		# Computing p-value
 		pobs =  round(prod(famRVprob[fam.info]),5)
-		p = sum((nequiv.array*pattern.prob.array)[round(pattern.prob.array)<=pobs & N.array>=sum(famNcarriers[fam.info])])
+		if (compute.p) p = sum((nequiv.array*pattern.prob.array)[round(pattern.prob.array)<=pobs & N.array>=sum(famNcarriers[fam.info])])
+		else p = NA
 		maxN = sapply(N.list[fam.info],max)
 		not = fam.info[famNcarriers[fam.info]<maxN]
 		if (length(not)>0)
 		{
-		  pshare = list(ped.tocompute.vec=fam.info,pshare=sapply(pattern.prob.list[fam.info],min))
-		  pall = get.psubset(fam.info,not,pshare)
+		if (2^nfam.info <= maxdim)
+			{
+		  	pshare = list(ped.tocompute.vec=fam.info,pshare=sapply(pattern.prob.list[fam.info],min))
+		  	pall = get.psubset(fam.info,not,pshare)
+			}
+		else pall = NA
 		}
-		else pall = prod(sapply(pattern.prob.list[fam.info],min))
+		else pall = potentialp
 	}
-	list(p=p,pall=pall)	
+	list(p=p,pall=pall,potentialp=potentialp)	
 }
